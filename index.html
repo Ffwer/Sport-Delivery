@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Спортивное питание</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: sans-serif;
+    }
+
+    .button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 0 10px;
+      border: none;
+      border-radius: 5px;
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .button:hover {
+      background-color: #45a049;
+    }
+
+    .inputField {
+      margin: 10px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .product-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .product-item {
+      display: flex;
+      align-items: center;
+      width: 300px;
+      margin: 10px;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .product-img {
+      width: 100px;
+      height: 100px;
+      margin-right: 10px;
+    }
+
+    .product-info {
+      flex: 1;
+    }
+
+    .quantity-control {
+      display: flex;
+      align-items: center;
+    }
+
+    .quantity-button {
+      border: none;
+      background-color: transparent;
+      cursor: pointer;
+      font-size: 20px;
+      margin: 0 5px;
+    }
+
+    .order-container {
+      border: 2px solid #ccc;
+      padding: 20px;
+      margin-bottom: 20px;
+      position: relative;
+      border-radius: 5px;
+    }
+
+    .order-info {
+      margin-bottom: 10px;
+    }
+
+    .order-check {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    .order-check.checked {
+      color: green;
+    }
+
+    .order-info p {
+      margin: 5px 0;
+    }
+
+    .order-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 500px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div id="startScreen">
+    <button class="button" onclick="showRole('admin')">Админ</button>
+    <button class="button" onclick="showRole('client')">Клиент</button>
+  </div>
+
+  <div id="adminLogin" style="display:none;">
+    <h1>Введите код доступа:</h1>
+    <input type="text" id="adminCode" class="inputField" placeholder="Код доступа">
+    <button class="button" onclick="checkAdminCode()">Войти</button>
+    <button class="button" onclick="goBack()">Назад</button>
+  </div>
+
+  <div id="adminContent" style="display:none;">
+    <h1>Выберите специальность:</h1>
+    <button class="button" onclick="showRole('manager')">Менеджер</button>
+
+  </div>
+
+  <div id="adminRoleLogin" style="display:none;">
+    <h1>Введите код доступа:</h1>
+    <input type="text" id="roleCode" class="inputField" placeholder="Код доступа">
+    <button class="button" onclick="checkRoleCode()">Войти</button>
+    <button class="button" onclick="goBack()">Назад</button>
+  </div>
+
+  <div id="adminRoleContent" style="display:none;">
+    <h1 id="roleMessage"></h1>
+    <div id="orders"></div>
+    <button class="button" onclick="goBack()">Назад</button>
+    <button class="button" onclick="clearOrders()">Очистить всё</button>
+  </div>
+
+  <div id="clientContent" style="display:none;">
+    <h1>Введите данные:</h1>
+    <input type="text" class="inputField" id="clientName" placeholder="ФИО">
+    <input type="text" class="inputField" id="clientPhone" placeholder="Номер телефона">
+    <input type="text" class="inputField" id="clientAddress" placeholder="Адрес доставки">
+    <button class="button" onclick="showProducts()">Далее</button>
+    <button class="button" onclick="goBack()">Назад</button>
+  </div>
+
+  <div id="productSelection" style="display:none;">
+    <div class="product-container">
+      <h2>Выберите спортивное питание:</h2>
+      <div id="products"></div>
+    </div>
+    <button class="button" onclick="placeOrder()">Далее</button>
+    <button class="button" onclick="goBack()">Назад</button>
+  </div>
+
+  <div id="orderConfirmation" style="display:none;">
+    <div class="order-content">
+      <h1>Спасибо за заказ, ожидайте звонка менеджера.</h1>
+      <p>Оплатите заказ через СБП по следующим реквизитам:</p>
+      <p>Номер телефона: 8 964 525-40-47</p>
+      <p>Банк получателя: ООО "Sports Delivery"</p>
+      <p>Сумма: <span id="orderTotal"></span></p>
+      <p>В комментариях: номер заказа из 9 цифр</p>
+      <p>Номер заказа: <span id="orderNumber"></span></p>
+      <p>Итого: <span id="orderItems"></span></p>
+    </div>
+    <button class="button" onclick="goBack()">Назад</button>
+  </div>
+
+  <script>
+    const products = [
+      { name: "Протеин", price: 2000, quantity: 0 },
+      { name: "BCAA", price: 1500, quantity: 0 },
+      { name: "Гейнер", price: 2500, quantity: 0 },
+      { name: "Креатин", price: 1000, quantity: 0 },
+      { name: "L-глутамин", price: 1200, quantity: 0 },
+      { name: "Витамины", price: 800, quantity: 0 },
+      { name: "Аминокислоты", price: 1800, quantity: 0 },
+      { name: "Изолят", price: 3000, quantity: 0 },
+      { name: "Казеин", price: 1600, quantity: 0 },
+      { name: "Жиросжигатель", price: 1400, quantity: 0 }
+    ];
+
+    let orders = []; // Array to store client orders
+
+    function showRole(role) {
+      document.getElementById('startScreen').style.display = 'none';
+
+      if (role === 'admin') {
+        document.getElementById('adminLogin').style.display = 'block';
+      } else if (role === 'client') {
+        document.getElementById('clientContent').style.display = 'block';
+      } else if (role === 'manager' || role === 'accountant' || role === 'assembler' || role === 'producer' || role === 'courier') {
+        document.getElementById('adminContent').style.display = 'none';
+        document.getElementById('adminRoleLogin').style.display = 'block';
+        document.getElementById('roleMessage').innerHTML = `Выберите код доступа для ${role} как `;
+      }
+    }
+
+    function checkAdminCode() {
+      const code = document.getElementById('adminCode').value;
+      if (code === '011220') {
+        document.getElementById('adminLogin').style.display = 'none';
+        document.getElementById('adminContent').style.display = 'block';
+      } else {
+        alert('Неверный код доступа!');
+      }
+    }
+
+    function checkRoleCode() {
+      const code = document.getElementById('roleCode').value;
+      const role = document.getElementById('roleMessage').textContent.split(' ')[4];
+
+      if (code === '25800311') {
+        document.getElementById('adminRoleLogin').style.display = 'none';
+        document.getElementById('adminRoleContent').style.display = 'block';
+        document.getElementById('roleMessage').innerHTML = `Вы вошли как ${role}`; 
+
+        if (role === 'manager') {
+          displayOrders('manager'); // Display orders for manager
+        } else if (role === 'accountant') {
+          displayOrders('accountant'); // Display orders for accountant
+        } else if (role === 'assembler') {
+          displayOrders('assembler'); // Display orders for assembler
+        } else if (role === 'producer') {
+          displayOrders('producer'); // Display orders for producer
+        } else if (role === 'courier') {
+          displayOrders('courier'); // Display orders for courier
+        }
+      } else {
+        alert('Неверный код доступа!');
+      }
+    }
+
+    function showProducts() {
+      document.getElementById('clientContent').style.display = 'none';
+      document.getElementById('productSelection').style.display = 'block';
+
+      const productsDiv = document.getElementById('products');
+      productsDiv.innerHTML = '';
+
+      products.forEach((product, index) => {
+        const productItem = document.createElement('div');
+        productItem.classList.add('product-item');
+
+        const productImg = document.createElement('img');
+        productImg.classList.add('product-img');
+        productImg.src = 'placeholder.jpg'; // Replace with actual product image
+
+        const productInfo = document.createElement('div');
+        productInfo.classList.add('product-info');
+        productInfo.innerHTML = `
+          <h3>${product.name}</h3>
+          <p>Цена: ${product.price} руб.</p>
+          <div class="quantity-control">
+            <button class="quantity-button" onclick="decreaseQuantity(${index})">-</button>
+            <span id="quantity-${index}">${product.quantity}</span>
+            <button class="quantity-button" onclick="increaseQuantity(${index})">+</button>
+          </div>
+        `;
+
+        productItem.appendChild(productImg);
+        productItem.appendChild(productInfo);
+        productsDiv.appendChild(productItem);
+      });
+    }
+
+    function increaseQuantity(index) {
+      products[index].quantity++;
+      updateQuantityDisplay(index);
+    }
+
+    function decreaseQuantity(index) {
+      if (products[index].quantity > 0) {
+        products[index].quantity--;
+      }
+      updateQuantityDisplay(index);
+    }
+
+    function updateQuantityDisplay(index) {
+      document.getElementById(`quantity-${index}`).textContent = products[index].quantity;
+    }
+
+    function placeOrder() {
+      let hasSelectedItem = false;
+      products.forEach(product => {
+        if (product.quantity > 0) {
+          hasSelectedItem = true;
+        }
+      });
+
+      if (hasSelectedItem) {
+        document.getElementById('productSelection').style.display = 'none';
+        document.getElementById('orderConfirmation').style.display = 'block';
+
+        let orderTotal = 0;
+        let orderItems = [];
+
+        products.forEach((product, index) => {
+          if (product.quantity > 0) {
+            orderTotal += product.price * product.quantity;
+            orderItems.push(`${product.name}: ${product.quantity} шт.`);
+          }
+        });
+
+        document.getElementById('orderTotal').textContent = orderTotal + ' руб.';
+        document.getElementById('orderNumber').textContent = Math.floor(100000000 + Math.random() * 900000000);
+        document.getElementById('orderItems').textContent = orderItems.join(', ');
+
+        // Add the new order to the orders array
+        orders.push({
+          name: document.getElementById('clientName').value,
+          phone: document.getElementById('clientPhone').value,
+          address: document.getElementById('clientAddress').value,
+          orderNumber: document.getElementById('orderNumber').textContent,
+          items: document.getElementById('orderItems').textContent,
+          total: orderTotal
+        });
+      } else {
+        alert('Вы не выбрали ни одного товара!');
+      }
+    }
+
+    function displayOrders(role) {
+      const ordersDiv = document.getElementById('orders');
+      ordersDiv.innerHTML = ''; // Clear previous orders
+
+      if (orders.length === 0) {
+        ordersDiv.innerHTML = '<p>Заказов пока нет.</p>';
+        return;
+      }
+
+      let orderIndex = 1; // Start order numbering from 1
+      orders.forEach((order, index) => {
+        const orderContainer = document.createElement('div');
+        orderContainer.classList.add('order-container');
+
+        if (role === 'manager') {
+          orderContainer.innerHTML = `
+            <div class="order-info">
+              <p>№${orderIndex}</p>
+              <p>ФИО: ${order.name}</p>
+              <p>Номер телефона: ${order.phone}</p>
+              <p>Адрес доставки: ${order.address}</p>
+              <p>Номер заказа: ${order.orderNumber}</p>
+              <p>Итого: ${order.items}</p>
+              <p>Сумма: ${order.total} руб.</p>
+            </div>
+            <span class="order-check" onclick="toggleCheck(${index})">&#x2716;</span>
+          `;
+        } else if (role === 'accountant') {
+          orderContainer.innerHTML = `
+            <div class="order-info">
+              <p>Номер заказа: ${order.orderNumber}</p>
+              <p>Сумма: ${order.total} руб.</p>
+            </div>
+          `;
+        } else if (role === 'assembler' || role === 'producer') {
+          orderContainer.innerHTML = `
+            <div class="order-info">
+              <p>№${orderIndex}</p>
+              <p>Номер заказа: ${order.orderNumber}</p>
+              <p>Итого: ${order.items}</p>
+            </div>
+            <span class="order-check" onclick="toggleCheck(${index})">&#x2716;</span>
+          `;
+          if (role === 'producer') {
+            orderContainer.innerHTML += '<p>Проверить срок годности, гарантийный номер, содержание спортпита</p>';
+          }
+        } else if (role === 'courier') {
+          orderContainer.innerHTML = `
+            <div class="order-info">
+              <p>№${orderIndex}</p>
+              <p>ФИО: ${order.name}</p>
+              <p>Номер телефона: ${order.phone}</p>
+              <p>Адрес доставки: ${order.address}</p>
+              <p>Итого: ${order.items}</p>
+            </div>
+            <span class="order-check" onclick="removeOrder(${index})">&#x2716;</span>
+          `;
+        }
+
+        orderContainer.style.border = '2px solid #ccc';
+        orderContainer.style.padding = '20px';
+        orderContainer.style.marginBottom = '20px';
+
+        if (role !== 'accountant' && role !== 'courier') {
+          orderContainer.querySelector('.order-check').classList.add('checked');
+          orderContainer.querySelector('.order-check').textContent = '✓';
+        }
+
+        ordersDiv.appendChild(orderContainer);
+        orderIndex++; // Increment order number
+      });
+    }
+
+    function toggleCheck(index) {
+      const orderContainer = document.getElementById('orders').children[index];
+      const checkIcon = orderContainer.querySelector('.order-check');
+
+      if (checkIcon.classList.contains('checked')) {
+        checkIcon.classList.remove('checked');
+        checkIcon.textContent = '&#x2716;';
+      } else {
+        checkIcon.classList.add('checked');
+        checkIcon.textContent = '✓';
+      }
+    }
+
+    function removeOrder(index) {
+      const ordersDiv = document.getElementById('orders');
+      const orderContainer = ordersDiv.children[index];
+      ordersDiv.removeChild(orderContainer); // Remove from the UI
+      orders.splice(index, 1); // Remove from the orders array
+      displayOrders('courier'); // Update display
+    }
+
+    function clearOrders() {
+      const role = document.getElementById('roleMessage').textContent.split(' ')[4]; // Get the role
+      orders = []; // Clear the orders array
+      displayOrders(role); // Update display
+    }
+
+    function goBack() {
+      document.getElementById('startScreen').style.display = 'block';
+      document.getElementById('adminLogin').style.display = 'none';
+      document.getElementById('adminContent').style.display = 'none';
+      document.getElementById('adminRoleLogin').style.display = 'none';
+      document.getElementById('adminRoleContent').style.display = 'none';
+      document.getElementById('clientContent').style.display = 'none';
+      document.getElementById('productSelection').style.display = 'none';
+      document.getElementById('orderConfirmation').style.display = 'none';
+    }
+  </script>
+</body>
+</html>
